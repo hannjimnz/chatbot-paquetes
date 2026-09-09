@@ -98,7 +98,13 @@ if (respuesta?.solicitarUbicacion === true) {
       if (respuesta?.mensaje) {
         this.mensajes.push(`Bot: ${respuesta.mensaje}`);
       }
+      if (respuesta?.paqueteId) {
+        this.paqueteIdActual = respuesta.paqueteId;
+      }
 
+      if (respuesta?.solicitarUbicacion === true) {
+        this.mostrarUbicacion = true;
+      }
       this.cdr.detectChanges();
     },
     error: (error) => {
@@ -176,19 +182,28 @@ compartirUbicacion() {
     },
 
     (error) => {
-      console.error('Error de geolocalización:', error);
+  console.error('Error de geolocalización:', error);
 
-      this.mensajes.push(
-        'Bot: No fue posible obtener tu ubicación. Debes permitir el acceso para validar la entrega.'
-      );
+  if (error.code === 1) {
+    this.mensajes.push(
+      'Bot: Debes permitir el acceso a tu ubicación para validar la entrega.'
+    );
+  } else if (error.code === 2) {
+    this.mensajes.push(
+      'Bot: No fue posible determinar tu ubicación actual.'
+    );
+  } else if (error.code === 3) {
+    this.mensajes.push(
+      'Bot: La ubicación está tardando demasiado. Intenta nuevamente.'
+    );
+  }
 
-      this.ubicacionEnProceso = false;
-      this.cdr.detectChanges();
-    },
-
+  this.ubicacionEnProceso = false;
+  this.cdr.detectChanges();
+},
     {
       enableHighAccuracy: true,
-      timeout: 10000,
+      timeout: 30000,
       maximumAge: 0
     }
   );
