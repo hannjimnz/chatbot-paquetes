@@ -16,7 +16,8 @@ export class App {
   mensajes: string[] = [];
   //esto lo eliminaremos previamente, es para fines de prueba. 
   mostrarConfirmacion = false;
-  paqueteIdActual = '1234';
+  //ya fue modificado para que se guarde el paqueteId actual en una variable de clase
+  paqueteIdActual: string | null = null;
 
   //propiedades para manejar la ubicación
   mostrarUbicacion = false;
@@ -81,7 +82,17 @@ if (respuesta?.solicitarUbicacion === true) {
   }
 
   // nuevos metodos para manejar la confirmación de entrega*
-  confirmarEntrega() {
+confirmarEntrega() {
+
+  // Verificamos que exista un paquete seleccionado
+  if (!this.paqueteIdActual) {
+    this.mensajes.push(
+      'Bot: No tengo un paquete seleccionado para confirmar la entrega.'
+    );
+    this.cdr.detectChanges();
+    return;
+  }
+
   this.mensajes.push('Tú: Sí, quiero recibirlo');
   this.mostrarConfirmacion = false;
 
@@ -98,6 +109,7 @@ if (respuesta?.solicitarUbicacion === true) {
       if (respuesta?.mensaje) {
         this.mensajes.push(`Bot: ${respuesta.mensaje}`);
       }
+
       if (respuesta?.paqueteId) {
         this.paqueteIdActual = respuesta.paqueteId;
       }
@@ -105,11 +117,15 @@ if (respuesta?.solicitarUbicacion === true) {
       if (respuesta?.solicitarUbicacion === true) {
         this.mostrarUbicacion = true;
       }
+
       this.cdr.detectChanges();
     },
+
     error: (error) => {
       console.error(error);
-      this.mensajes.push('Bot: Ocurrió un error al confirmar la entrega.');
+      this.mensajes.push(
+        'Bot: Ocurrió un error al confirmar la entrega.'
+      );
       this.cdr.detectChanges();
     }
   });
@@ -127,6 +143,14 @@ cancelarEntrega() {
 
 //metodo para la ubicación
 compartirUbicacion() {
+
+  if (!this.paqueteIdActual) {
+  this.mensajes.push(
+    'Bot: No se encontró el ID del paquete para validar la ubicación.'
+  );
+  this.cdr.detectChanges();
+  return;
+}
   if (!navigator.geolocation) {
     this.mensajes.push(
       'Bot: Tu navegador no permite obtener la ubicación.'
