@@ -53,7 +53,7 @@ export class App {
 
         }
 
-        // Le avisamos a Angular que refresque la vista
+        
         this.cdr.detectChanges();
       },
 
