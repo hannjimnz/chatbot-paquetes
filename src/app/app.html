@@ -1,15 +1,35 @@
 <div class="chat-container">
 
-  <h1>📦 Chat de Paquetes</h1>
+  <h1> Chat de Paquetes</h1>
   <p class="subtitle">Consulta el estado de tu paquete</p>
 
   <div class="chat-box">
 
-    <div *ngFor="let item of mensajes" class="mensaje">
-      {{ item }}
-    </div>
+  <div *ngFor="let item of mensajes" class="mensaje">
+    {{ item }}
+  </div>
+
+  <div *ngIf="mostrarConfirmacion" class="confirmacion">
+    <button (click)="confirmarEntrega()">
+      Sí, recibir hoy
+    </button>
+
+    <button (click)="cancelarEntrega()">
+      No
+    </button>
+
 
   </div>
+  <div *ngIf="mostrarUbicacion" class="confirmacion">
+  <button
+    (click)="compartirUbicacion()"
+    [disabled]="ubicacionEnProceso"
+  >
+    📍 Compartir mi ubicación
+  </button>
+</div>
+
+</div>
 
   <div class="input-area">
     <input

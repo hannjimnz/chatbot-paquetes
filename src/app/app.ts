@@ -14,6 +14,13 @@ export class App {
 
   mensaje = '';
   mensajes: string[] = [];
+  //esto lo eliminaremos previamente, es para fines de prueba. 
+  mostrarConfirmacion = false;
+  paqueteIdActual = '1234';
+
+  //propiedades para manejar la ubicación
+  mostrarUbicacion = false;
+  ubicacionEnProceso = false;
 
   constructor(
     private http: HttpClient,
@@ -36,27 +43,27 @@ export class App {
     ).subscribe({
 
       next: (respuesta) => {
+  console.log('Respuesta de n8n:', respuesta);
 
-        console.log('Respuesta de n8n:', respuesta);
+  if (respuesta?.mensaje) {
+    this.mensajes.push(`Bot: ${respuesta.mensaje}`);
+  } else {
+    this.mensajes.push('Bot: n8n respondió, pero no llegó un mensaje.');
+  }
 
-        if (respuesta && respuesta.mensaje) {
+  if (respuesta?.solicitarConfirmacion === true) {
+    this.mostrarConfirmacion = true;
+  }
+  if (respuesta?.paqueteId) {
+  this.paqueteIdActual = respuesta.paqueteId;
+}
 
-          this.mensajes.push(
-            `Bot: ${respuesta.mensaje}`
-          );
+if (respuesta?.solicitarUbicacion === true) {
+  this.mostrarUbicacion = true;
+}
 
-        } else {
-
-          this.mensajes.push(
-            'Bot: n8n respondió, pero no llegó un mensaje.'
-          );
-
-        }
-
-        
-        this.cdr.detectChanges();
-      },
-
+  this.cdr.detectChanges();
+},
       error: (error) => {
 
         console.error(error);
@@ -72,4 +79,118 @@ export class App {
 
     this.mensaje = '';
   }
+
+  // nuevos metodos para manejar la confirmación de entrega*
+  confirmarEntrega() {
+  this.mensajes.push('Tú: Sí, quiero recibirlo');
+  this.mostrarConfirmacion = false;
+
+  this.http.post<any>(
+    'https://n8n.ozaru.app/webhook/consultar-paquete',
+    {
+      mensaje: 'Sí, quiero recibirlo',
+      paqueteId: this.paqueteIdActual
+    }
+  ).subscribe({
+    next: (respuesta) => {
+      console.log('Confirmación:', respuesta);
+
+      if (respuesta?.mensaje) {
+        this.mensajes.push(`Bot: ${respuesta.mensaje}`);
+      }
+
+      this.cdr.detectChanges();
+    },
+    error: (error) => {
+      console.error(error);
+      this.mensajes.push('Bot: Ocurrió un error al confirmar la entrega.');
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+cancelarEntrega() {
+  this.mensajes.push('Tú: No, gracias');
+  this.mensajes.push(
+    'Bot: Perfecto. No se realizará la entrega en este momento.'
+  );
+
+  this.mostrarConfirmacion = false;
+  this.cdr.detectChanges();
+}
+
+//metodo para la ubicación
+compartirUbicacion() {
+  if (!navigator.geolocation) {
+    this.mensajes.push(
+      'Bot: Tu navegador no permite obtener la ubicación.'
+    );
+    this.cdr.detectChanges();
+    return;
+  }
+
+  this.ubicacionEnProceso = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latitud = position.coords.latitude;
+      const longitud = position.coords.longitude;
+
+      console.log('Latitud:', latitud);
+      console.log('Longitud:', longitud);
+
+      this.mensajes.push('Tú: Compartí mi ubicación actual.');
+
+      this.http.post<any>(
+        'https://n8n.ozaru.app/webhook/validar-ubicacion',
+        {
+          paqueteId: this.paqueteIdActual,
+          latitud: latitud,
+          longitud: longitud
+        }
+      ).subscribe({
+        next: (respuesta) => {
+          console.log('Validación ubicación:', respuesta);
+
+          if (respuesta?.mensaje) {
+            this.mensajes.push(`Bot: ${respuesta.mensaje}`);
+          }
+
+          this.mostrarUbicacion = false;
+          this.ubicacionEnProceso = false;
+
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error(error);
+
+          this.mensajes.push(
+            'Bot: Ocurrió un error al validar tu ubicación.'
+          );
+
+          this.ubicacionEnProceso = false;
+          this.cdr.detectChanges();
+        }
+      });
+    },
+
+    (error) => {
+      console.error('Error de geolocalización:', error);
+
+      this.mensajes.push(
+        'Bot: No fue posible obtener tu ubicación. Debes permitir el acceso para validar la entrega.'
+      );
+
+      this.ubicacionEnProceso = false;
+      this.cdr.detectChanges();
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
 }
