@@ -14,9 +14,10 @@
       Sí, recibir hoy
     </button>
 
-    <button (click)="cancelarEntrega()">
-      No
-    </button>
+    
+     <button (click)="rechazarEntregaHoy()">
+    No, no quiero recibirlo hoy
+  </button>
 
 
   </div>
@@ -26,6 +27,12 @@
     [disabled]="ubicacionEnProceso"
   >
       Compartir mi ubicación
+  </button>
+
+  <button
+  (click)="rechazarUbicacion()"
+  [disabled]="ubicacionEnProceso"
+  > No compartir mi ubicación
   </button>
 </div>
 
@@ -39,7 +46,8 @@
       (keyup.enter)="enviarMensaje()"
     />
 
-    <button (click)="enviarMensaje()">
+    <button class="btn-enviar"
+    (click)="enviarMensaje()">
       Enviar
     </button>
   </div>

@@ -14,7 +14,7 @@ export class App {
 
   mensaje = '';
   mensajes: string[] = [];
-  //esto lo eliminaremos previamente, es para fines de prueba. 
+  
   mostrarConfirmacion = false;
   //ya fue modificado para que se guarde el paqueteId actual en una variable de clase
   paqueteIdActual: string | null = null;
@@ -131,15 +131,7 @@ confirmarEntrega() {
   });
 }
 
-cancelarEntrega() {
-  this.mensajes.push('Tú: No, gracias');
-  this.mensajes.push(
-    'Bot: Perfecto. No se realizará la entrega en este momento.'
-  );
 
-  this.mostrarConfirmacion = false;
-  this.cdr.detectChanges();
-}
 
 //metodo para la ubicación
 compartirUbicacion() {
@@ -208,20 +200,20 @@ compartirUbicacion() {
     (error) => {
   console.error('Error de geolocalización:', error);
 
-  if (error.code === 1) {
+  if (error.code === error.PERMISSION_DENIED) {
     this.mensajes.push(
-      'Bot: Debes permitir el acceso a tu ubicación para validar la entrega.'
+      'Bot: Necesito acceso a tu ubicacion para validar la entrega. Sin tu ubicacion no sera posible validar la entrega.'
     );
-  } else if (error.code === 2) {
+  } else if (error.code === error.TIMEOUT) {
     this.mensajes.push(
-      'Bot: No fue posible determinar tu ubicación actual.'
+      'Bot: La ubicacion tardo demasiado en responder. Intenta compartir tu ubicacion nuevamente .'
     );
-  } else if (error.code === 3) {
+  } else {
     this.mensajes.push(
-      'Bot: La ubicación está tardando demasiado. Intenta nuevamente.'
+      'Bot: No fue posible obtener tu ubicación. Intenta nuevamente.'
     );
   }
-
+  this.mostrarUbicacion = true;
   this.ubicacionEnProceso = false;
   this.cdr.detectChanges();
 },
@@ -231,5 +223,33 @@ compartirUbicacion() {
       maximumAge: 0
     }
   );
+}
+//metodo para rechazar la ubicación
+rechazarUbicacion() {
+  this.mensajes.push(
+    'Tú: No quiero compartir mi ubicación.'
+  );
+  this.mensajes.push(
+    'Bot: Para validar la entrega necesito que compartas tu ubicación actual. Sin tu ubicación no podemos confirmar la entrega del paquete.'
+  );
+
+  this.mostrarUbicacion = true;
+  this.cdr.detectChanges();
+}
+
+//metodo para rechazar la entrega
+rechazarEntregaHoy() {
+  this.mensajes.push(
+    'Tú: No, no quiero recibirlo hoy.'
+  );
+
+  this.mensajes.push(
+    'Bot: Entendido. Tu paquete seguirá listo para entrega. Puedes volver a intentarlo cuando estés disponible para recibirlo.'
+  );
+
+  this.mostrarConfirmacion = false;
+  this.mostrarUbicacion = false;
+
+  this.cdr.detectChanges();
 }
 }
