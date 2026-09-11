@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, ElementRef,  ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './app.css'
 })
 export class App {
+  @ViewChild('chatBox') chatBox!: ElementRef;
 
   mensaje = '';
   mensajes: string[] = [];
@@ -42,6 +43,7 @@ export class App {
     
 
     this.mensajes.push(`Tú: ${mensajeUsuario}`);
+    this.scrollAlFinal();
 
     this.http.post<any>(
       'https://n8n.ozaru.app/webhook/consultar-paquete',
@@ -71,6 +73,7 @@ if (respuesta?.solicitarUbicacion === true) {
 }
 
   this.cdr.detectChanges();
+  this.scrollAlFinal();
 },
       error: (error) => {
 
@@ -81,6 +84,7 @@ if (respuesta?.solicitarUbicacion === true) {
         );
 
         this.cdr.detectChanges();
+        this.scrollAlFinal();
       }
 
     });
@@ -102,12 +106,14 @@ confirmarEntrega() {
   }
 
   this.mensajes.push('Tú: Sí, quiero recibirlo');
+  this.scrollAlFinal();
   this.mostrarConfirmacion = false;
 
   this.http.post<any>(
     'https://n8n.ozaru.app/webhook/consultar-paquete',
     {
       mensaje: 'Sí, quiero recibirlo',
+      
       paqueteId: this.paqueteIdActual
     }
   ).subscribe({
@@ -127,6 +133,7 @@ confirmarEntrega() {
       }
 
       this.cdr.detectChanges();
+      this.scrollAlFinal();
     },
 
     error: (error) => {
@@ -135,6 +142,7 @@ confirmarEntrega() {
         'Bot: Ocurrió un error al confirmar la entrega.'
       );
       this.cdr.detectChanges();
+      this.scrollAlFinal();
     }
   });
 }
@@ -149,6 +157,7 @@ compartirUbicacion() {
     'Bot: No se encontró el ID del paquete para validar la ubicación.'
   );
   this.cdr.detectChanges();
+  this.scrollAlFinal();
   return;
 }
 this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar compartir la ubicación
@@ -157,6 +166,7 @@ this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar comp
       'Bot: Tu navegador no permite obtener la ubicación.'
     );
     this.cdr.detectChanges();
+    this.scrollAlFinal();
     return;
   }
 
@@ -171,6 +181,7 @@ this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar comp
       console.log('Longitud:', longitud);
 
       this.mensajes.push('Tú: Compartí mi ubicación actual.');
+      this.scrollAlFinal();
 
       this.http.post<any>(
         'https://n8n.ozaru.app/webhook/validar-ubicacion',
@@ -200,6 +211,7 @@ this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar comp
           this.ubicacionEnProceso = false;
 
           this.cdr.detectChanges();
+          this.scrollAlFinal();
         },
 
         error: (error) => {
@@ -211,6 +223,7 @@ this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar comp
 
           this.ubicacionEnProceso = false;
           this.cdr.detectChanges();
+          this.scrollAlFinal();
         }
       });
     },
@@ -234,6 +247,7 @@ this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar comp
   this.mostrarUbicacion = true;
   this.ubicacionEnProceso = false;
   this.cdr.detectChanges();
+  this.scrollAlFinal();
 },
     {
       enableHighAccuracy: true,
@@ -258,6 +272,7 @@ rechazarUbicacion() {
   this.mostrarUbicacion = true;
 
   this.cdr.detectChanges();
+  this.scrollAlFinal();
 }
 
 //metodo para rechazar la entrega
@@ -275,6 +290,7 @@ rechazarEntregaHoy() {
   this.mostrarIntentarMasTarde = false;
 
   this.cdr.detectChanges();
+  this.scrollAlFinal();
 }
 //metodo para intentar entregar mas tarde
 entregarMasTarde() {
@@ -292,5 +308,17 @@ entregarMasTarde() {
   this.mostrarUbicacion = false;
 
   this.cdr.detectChanges();
+  this.scrollAlFinal();
+}
+//metodo para hacer scroll al final del chat
+scrollAlFinal() {
+  setTimeout(() => {
+    if (this.chatBox) {
+      this.chatBox.nativeElement.scrollTo({
+        top: this.chatBox.nativeElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, 50);
 }
 }
