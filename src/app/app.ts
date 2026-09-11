@@ -23,6 +23,9 @@ export class App {
   mostrarUbicacion = false;
   ubicacionEnProceso = false;
 
+  //bandera para mostrar el mensaje de "intentar más tarde"
+  mostrarIntentarMasTarde = false;
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef
@@ -33,6 +36,10 @@ export class App {
     if (!this.mensaje.trim()) return;
 
     const mensajeUsuario = this.mensaje;
+    this.mostrarConfirmacion = false;
+    this.mostrarUbicacion = false;
+    this.mostrarIntentarMasTarde = false;
+    
 
     this.mensajes.push(`Tú: ${mensajeUsuario}`);
 
@@ -77,8 +84,9 @@ if (respuesta?.solicitarUbicacion === true) {
       }
 
     });
-
+ 
     this.mensaje = '';
+
   }
 
   // nuevos metodos para manejar la confirmación de entrega*
@@ -143,6 +151,7 @@ compartirUbicacion() {
   this.cdr.detectChanges();
   return;
 }
+this.mostrarIntentarMasTarde = false; // Reiniciamos la bandera al intentar compartir la ubicación
   if (!navigator.geolocation) {
     this.mensajes.push(
       'Bot: Tu navegador no permite obtener la ubicación.'
@@ -176,6 +185,15 @@ compartirUbicacion() {
 
           if (respuesta?.mensaje) {
             this.mensajes.push(`Bot: ${respuesta.mensaje}`);
+          }
+          //si la ubicacion no coincide entonces mostrara un mensaje que no conidce y que intente mas tarde
+          if (respuesta?.entregaValida === false) {
+            this.mostrarIntentarMasTarde = true;
+          }
+
+          if (respuesta?.entregaValida === true) {
+            this.mostrarConfirmacion = false;
+            this.mostrarIntentarMasTarde = false;
           }
 
           this.mostrarUbicacion = false;
@@ -226,14 +244,19 @@ compartirUbicacion() {
 }
 //metodo para rechazar la ubicación
 rechazarUbicacion() {
+  this.mostrarConfirmacion = false;
+  this.mostrarIntentarMasTarde = false;
+
   this.mensajes.push(
     'Tú: No quiero compartir mi ubicación.'
   );
+
   this.mensajes.push(
     'Bot: Para validar la entrega necesito que compartas tu ubicación actual. Sin tu ubicación no podemos confirmar la entrega del paquete.'
   );
 
   this.mostrarUbicacion = true;
+
   this.cdr.detectChanges();
 }
 
@@ -248,6 +271,24 @@ rechazarEntregaHoy() {
   );
 
   this.mostrarConfirmacion = false;
+  this.mostrarUbicacion = false;
+  this.mostrarIntentarMasTarde = false;
+
+  this.cdr.detectChanges();
+}
+//metodo para intentar entregar mas tarde
+entregarMasTarde() {
+
+  this.mensajes.push(
+    'Tú: Intentaré recibirlo más tarde.'
+  );
+
+  this.mensajes.push(
+    'Bot: Entendido. Tu paquete seguirá listo para entrega. Puedes volver a intentarlo cuando estés en la ubicación correcta.'
+  );
+
+  this.mostrarConfirmacion = false;
+  this.mostrarIntentarMasTarde = false;
   this.mostrarUbicacion = false;
 
   this.cdr.detectChanges();

@@ -1,55 +1,154 @@
-<div class="chat-container">
+<div class="page">
 
-  <h1> Chat de Paquetes</h1>
-  <p class="subtitle">Consulta el estado de tu paquete</p>
+  <main class="chat-app">
 
-  <div class="chat-box">
+    <!-- ENCABEZADO -->
+    <header class="chat-header">
 
-  <div *ngFor="let item of mensajes" class="mensaje">
-    {{ item }}
-  </div>
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M21 8a2 2 0 0 0-1-1h-3V5a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1.1a3 3 0 0 0 5.8 0h4.2a3 3 0 0 0 5.8 0H21a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2Zm-14 9.5A1.5 1.5 0 1 1 7 14a1.5 1.5 0 0 1 0 3.5Zm10 0a1.5 1.5 0 1 1 0-3.5 1.5 1.5 0 0 1 0 3.5ZM17 9h2.5l1.5 2H17Z"
+          />
+        </svg>
+      </div>
 
-  <div *ngIf="mostrarConfirmacion" class="confirmacion">
-    <button (click)="confirmarEntrega()">
-      Sí, recibir hoy
-    </button>
+      <div class="header-text">
+        <h1>Seguimiento de Paquetes</h1>
 
-    
-     <button (click)="rechazarEntregaHoy()">
-    No, no quiero recibirlo hoy
-  </button>
+        <div class="status-line">
+          <span class="status-dot"></span>
+          <span>Asistente de entregas</span>
+        </div>
+      </div>
+    </header>
 
+    <section class="chat-box">
+      <div *ngIf="mensajes.length === 0" class="welcome">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM12 4.15 17.74 7.4 12 10.65 6.26 7.4ZM5 9.13l6 3.4v6.92l-6-3.43Zm8 10.32v-6.92l6-3.4v6.89Z"
+            />
+          </svg>
+        </div>
+        <h2>¿Dónde está tu paquete?</h2>
+        <p>
+          Consulta el estado de tu envío y valida tu entrega de forma rápida y segura.
+        </p>
 
-  </div>
-  <div *ngIf="mostrarUbicacion" class="confirmacion">
-  <button
-    (click)="compartirUbicacion()"
-    [disabled]="ubicacionEnProceso"
-  >
-      Compartir mi ubicación
-  </button>
+        <span class="welcome-example">
+          Ejemplo: ¿Dónde está mi paquete 1234?
+        </span>
 
-  <button
-  (click)="rechazarUbicacion()"
-  [disabled]="ubicacionEnProceso"
-  > No compartir mi ubicación
-  </button>
-</div>
+      </div>
+      <div
+        *ngFor="let item of mensajes"
+        class="mensaje-row"
+        [ngClass]="item.startsWith('Tú:') ? 'usuario-row' : 'bot-row'"
+      >
+        <div
+          class="mensaje"
+          [ngClass]="item.startsWith('Tú:') ? 'mensaje-usuario' : 'mensaje-bot'"
+        >
+          {{ item }}
+        </div>
 
-</div>
+      </div>
 
-  <div class="input-area">
-    <input
-      type="text"
-      [(ngModel)]="mensaje"
-      placeholder="Ej. ¿Dónde está mi paquete 1234?"
-      (keyup.enter)="enviarMensaje()"
-    />
+      <div *ngIf="mostrarConfirmacion" class="acciones">
 
-    <button class="btn-enviar"
-    (click)="enviarMensaje()">
-      Enviar
-    </button>
-  </div>
+        <button
+          class="btn-primary"
+          (click)="confirmarEntrega()"
+        >
+          <span class="button-icon">✓</span>
+          Sí, recibir hoy
+        </button>
+
+        <button
+          class="btn-secondary"
+          (click)="rechazarEntregaHoy()"
+        >
+          Intentar otro día
+        </button>
+
+      </div>
+
+      <div *ngIf="mostrarUbicacion" class="acciones">
+
+        <button
+          class="btn-primary"
+          (click)="compartirUbicacion()"
+          [disabled]="ubicacionEnProceso"
+        >
+          <span class="button-icon">⌖</span>
+
+          <span *ngIf="!ubicacionEnProceso">
+            Compartir mi ubicación
+          </span>
+
+          <span *ngIf="ubicacionEnProceso">
+            Obteniendo ubicación...
+          </span>
+        </button>
+
+        <button
+          class="btn-secondary"
+          (click)="rechazarUbicacion()"
+          [disabled]="ubicacionEnProceso"
+        >
+          No compartir
+        </button>
+
+      </div>
+
+      <div *ngIf="mostrarIntentarMasTarde" class="acciones acciones-validacion">
+
+        <button
+          class="btn-primary"
+          (click)="compartirUbicacion()"
+        >
+          <span class="button-icon">⌖</span>
+          Volver a compartir ubicación
+        </button>
+
+        <button
+          class="btn-secondary"
+          (click)="entregarMasTarde()"
+        >
+          Intentar más tarde
+        </button>
+
+      </div>
+
+    </section>
+
+    <footer class="input-area">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          [(ngModel)]="mensaje"
+          placeholder="Escribe tu mensaje..."
+          (keyup.enter)="enviarMensaje()"
+        />
+      </div>
+      <button
+        class="btn-enviar"
+        (click)="enviarMensaje()"
+        aria-label="Enviar mensaje"
+      >
+        <span>Enviar</span>
+
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M3.4 20.4 21.85 12 3.4 3.6 3 10.1l13.2 1.9L3 13.9Z"
+          />
+        </svg>
+      </button>
+
+    </footer>
+
+  </main>
 
 </div>
